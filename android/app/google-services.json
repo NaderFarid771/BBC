@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "178649902456",
+    "project_id": "mindo-quizzzz",
+    "storage_bucket": "mindo-quizzzz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178649902456:android:cd7d44d9e9057683406c8d",
+        "android_client_info": {
+          "package_name": "com.example.asd"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgFcgSvB35FZFlusnaA0czNNHZSRX4NRU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178649902456:android:4cc85ebaa1b49c6e406c8d",
+        "android_client_info": {
+          "package_name": "com.example.mindo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgFcgSvB35FZFlusnaA0czNNHZSRX4NRU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
