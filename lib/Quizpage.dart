@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mindo/provider/questionprovider.dart';
-import 'package:mindo/model/questionmodel.dart';
+// هذا السطر يحل المشكلة
 import '../widgets/option_tile.dart';
 import '../widgets/question_header.dart';
 import '../widgets/next_button.dart';
+import 'congrats_screen.dart';
+import 'oops_screen.dart';
 
 class QuizPage extends StatefulWidget {
   final String category;
@@ -13,7 +15,7 @@ class QuizPage extends StatefulWidget {
   
   const QuizPage({
     super.key,
-    this.category = '9',
+    this.category = '9',           
     this.numberOfQuestions = 10,
   });
 
@@ -42,23 +44,23 @@ class _QuizPageState extends State<QuizPage> {
     timer?.cancel();
     timeLeft = 30;
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      final provider = context.read<QuestionProvider>();
       if (timeLeft > 0) {
-        setState(() {
-          timeLeft--;
-        });
+        if(mounted){
+          setState(() {
+            timeLeft--;
+          });
+        }
       } else {
         t.cancel();
+        final provider = context.read<QuestionProvider>();
         if (!provider.isAnswered) {
           provider.selectAnswer(provider.correctAnswerIndex);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Time's up!"),
-              duration: Duration(seconds: 2),
-            ),
-          );
-          Future.delayed(const Duration(seconds: 2), () {
-            goToNextQuestion();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (provider.currentQuestionIndex == provider.questions.length - 1) {
+              _showResultDialog(provider);
+            } else {
+              goToNextQuestion();
+            }
           });
         }
       }
@@ -67,44 +69,17 @@ class _QuizPageState extends State<QuizPage> {
 
   void goToNextQuestion() {
     final provider = context.read<QuestionProvider>();
-    if (provider.currentQuestionIndex < provider.questions.length - 1) {
-      provider.nextQuestion();
-      startTimer();
-    } else {
-      timer?.cancel();
-      _showResultDialog(provider);
-    }
+    provider.nextQuestion();
+    startTimer();
   }
 
   void _showResultDialog(QuestionProvider provider) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Quiz Complete!'),
-        content: Text(
-          'Your Score: ${provider.score}/${provider.questions.length}\n'
-          'Percentage: ${((provider.score / provider.questions.length) * 100).toStringAsFixed(1)}%'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              provider.resetQuiz();
-              provider.loadQuestions(widget.category, widget.numberOfQuestions);
-            },
-            child: const Text('Play Again'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: const Text('Exit'),
-          ),
-        ],
-      ),
-    );
+    timer?.cancel();
+    if (provider.score > 5) {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CongratsScreen()));
+    } else {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OopsScreen()));
+    }
   }
 
   Question convertToQuestion(QuestionProvider provider) {
@@ -171,7 +146,7 @@ class _QuizPageState extends State<QuizPage> {
                       ElevatedButton(
                         onPressed: () {
                           provider.loadQuestions(
-                            widget.category,
+                            widget.category, 
                             widget.numberOfQuestions
                           );
                         },
@@ -188,9 +163,10 @@ class _QuizPageState extends State<QuizPage> {
                 );
               }
 
+
               final currentQ = convertToQuestion(provider);
 
-              if (timeLeft == 30 && timer == null && !provider.isQuizFinished) {
+              if (timeLeft == 30 && timer == null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   startTimer();
                 });
@@ -228,7 +204,7 @@ class _QuizPageState extends State<QuizPage> {
                     child: ListView.builder(
                       itemCount: currentQ.options.length,
                       itemBuilder: (context, index) {
-                        bool isCorrect = provider.isAnswered &&
+                        bool isCorrect = provider.isAnswered && 
                             index == provider.correctAnswerIndex;
                         bool isWrong = provider.isAnswered &&
                             index == provider.selectedAnswerIndex &&
@@ -250,13 +226,12 @@ class _QuizPageState extends State<QuizPage> {
                   ),
 
                   NextButton(
-                    isLast: provider.currentQuestionIndex ==
+                    isLast: provider.currentQuestionIndex == 
                         provider.questions.length - 1,
                     onPressed: () {
                       if (provider.isAnswered) {
                          if (provider.currentQuestionIndex ==
                           provider.questions.length - 1) {
-                            timer?.cancel();
                             _showResultDialog(provider);
                         } else {
                           goToNextQuestion();
@@ -286,7 +261,7 @@ class Question {
   final List<String> options;
   final int correctIndex;
 
-  Question({
+  const Question({
     required this.text,
     required this.options,
     required this.correctIndex,

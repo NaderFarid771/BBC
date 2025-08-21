@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'Profile.dart';
 import 'theme_provider.dart';
 import 'Quizpage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'leaderboard_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,6 +13,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.themeMode == ThemeMode.dark;
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String displayName = user?.displayName ?? 'User';
 
     Color bgColor = isDark ? Colors.black : const Color(0xFFF5F5F5);
     Color textColor = isDark ? Colors.white : Colors.black;
@@ -25,40 +29,11 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hi, malak', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 25, color: textColor)),
+              Text('Hi, $displayName', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 25, color: textColor)),
               const SizedBox(height: 8),
               Text('Let’s make this day productive', style: TextStyle(fontWeight: FontWeight.w400, fontSize: 11, color: subTextColor)),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Image.asset('assets/images/light/coin.png', width: 40),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('50 Quiz Points', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: textColor)),
-                          Text('You have earned 50 points so far', style: TextStyle(fontSize: 12, color: subTextColor)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 40),
+
               Text('Categories', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20, color: textColor)),
               const SizedBox(height: 16),
 
@@ -71,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'Science',
                     categoryId: '17',
                     imagePath: 'assets/images/light/dna.png',
-                    questions: '42 Questions',
+                    questions: '10 Questions',
                     bg: const Color(0xFFFEE2E2),
                     isDark: isDark,
                   ),
@@ -80,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'Technology',
                     categoryId: '18',
                     imagePath: 'assets/images/light/map.png',
-                    questions: '20 Questions',
+                    questions: '10 Questions',
                     bg: const Color(0xFFDBEAFE),
                     isDark: isDark,
                   ),
@@ -89,7 +64,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'Sports',
                     categoryId: '21',
                     imagePath: 'assets/images/light/basket.png',
-                    questions: '20 Questions',
+                    questions: '10 Questions',
                     bg: const Color(0xFFE0E7FF),
                     isDark: isDark,
                   ),
@@ -98,7 +73,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'Chemistry',
                     categoryId: '19',
                     imagePath: 'assets/images/light/test_tube.png',
-                    questions: '20 Questions',
+                    questions: '10 Questions',
                     bg: const Color(0xFFD1FAE5),
                     isDark: isDark,
                   ),
@@ -107,7 +82,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'Math',
                     categoryId: '19',
                     imagePath: 'assets/images/light/content.png',
-                    questions: '20 Questions',
+                    questions: '10 Questions',
                     bg: const Color(0xFFE2EAD1),
                     isDark: isDark,
                   ),
@@ -116,7 +91,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'History',
                     categoryId: '23',
                     imagePath: 'assets/images/light/calender.png',
-                    questions: '20 Questions',
+                    questions: '10 Questions',
                     bg: const Color(0xFFFDE68A),
                     isDark: isDark,
                   ),
@@ -138,7 +113,12 @@ class HomeScreen extends StatelessWidget {
               },
               child: Icon(Icons.person, color: isDark ? Colors.white : Colors.black, size: 30),
             ),
-            Icon(Icons.leaderboard, color: isDark ? Colors.white : Colors.black, size: 30),
+            InkWell(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardScreen()));
+              },
+              child: Icon(Icons.leaderboard, color: isDark ? Colors.white : Colors.black, size: 30),
+            ),
           ],
         ),
       ),

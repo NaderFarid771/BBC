@@ -19,9 +19,9 @@ class OptionTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     Color getColor() {
-      if (isCorrect) return theme.colorScheme.secondary; // صح حسب الثيم
-      if (isWrong) return theme.colorScheme.error;        // غلط حسب الثيم
-      return theme.cardColor;                             // لون افتراضي حسب الثيم
+      if (isCorrect) return theme.colorScheme.secondary;
+      if (isWrong) return theme.colorScheme.error;
+      return theme.cardColor;
     }
 
     IconData? getIcon() {
@@ -52,11 +52,7 @@ class OptionTile extends StatelessWidget {
                 ),
               ),
             ),
-            if (getIcon() != null)
-              Icon(
-                getIcon(),
-                color: getColor(),
-              ),
+            if (getIcon() != null) Icon(getIcon(), color: getColor()),
           ],
         ),
       ),

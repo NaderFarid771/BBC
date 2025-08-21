@@ -20,28 +20,27 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.themeMode == ThemeMode.dark;
+    final User? user = FirebaseAuth.instance.currentUser;
+    final String displayName = user?.displayName ?? 'User Name';
+    final String email = user?.email ?? 'useremail@example.com';
 
     Color bgColor = isDark ? Colors.black : Colors.white;
     Color textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: isDark ? Colors.black : Colors.white,
-        foregroundColor: isDark ? Colors.white : Colors.black,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _signOut(context),
-            tooltip: 'Sign Out',
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Column(
           children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: textColor),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -52,34 +51,38 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Itunuoluwa Abidoye',
+                    displayName,
                     style: TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                   ),
-                  const Text(
-                    'itunuoluwa@petrafrica',
-                    style: TextStyle(color: Colors.grey),
+                  Text(
+                    email,
+                    style: const TextStyle(color: Colors.grey),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Color(0xFF4555A4)),
-                          const SizedBox(width: 5),
-                          Text('50 Points', style: TextStyle(color: textColor)),
-                        ],
+                  const SizedBox(height: 20),
+                  Text(
+                    'Keep Going, $displayName',
+                    style: TextStyle(fontSize: 16, color: textColor),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => WelcomePage()),
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(width: 20),
-                      Row(
-                        children: [
-                          const Icon(Icons.psychology_outlined, color: Color(0xFF4555A4)),
-                          const SizedBox(width: 5),
-                          Text('10 Quizzes', style: TextStyle(color: textColor)),
-                        ],
-                      ),
-                    ],
+                    ),
+                    child: const Text('Log Out'),
                   ),
                 ],
               ),
@@ -113,20 +116,6 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        color: isDark ? Colors.black : Colors.white,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            InkWell(
-              onTap: () {},
-              child: Icon(Icons.person, color: isDark ? Colors.white : Colors.black, size: 30),
-            ),
-            Icon(Icons.star, color: isDark ? Colors.white : Colors.black, size: 30),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -142,9 +131,8 @@ class QuizCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Color textColor;
     Color refreshColor = Colors.grey;
-    bool isSports = subject == 'Sports';
 
-    if (isSports) {
+    if (subject == 'Sports') {
       textColor = const Color(0xFF6366F1);
       refreshColor = const Color(0xFF6366F1);
     } else if (subject == 'Chemistry') {
@@ -165,10 +153,10 @@ class QuizCard extends StatelessWidget {
             Text(score, style: TextStyle(color: isDark ? Colors.white70 : Colors.black)),
             GestureDetector(
               onTap: () {
-                if (isSports) {
+                if (subject == 'Sports') {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => QuizPage()),
+                    MaterialPageRoute(builder: (context) => const QuizPage()),
                   );
                 }
               },

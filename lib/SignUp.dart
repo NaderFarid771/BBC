@@ -6,6 +6,7 @@ import 'theme_provider.dart';
 class SignUpPage extends StatelessWidget {
   SignUpPage({super.key});
 
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passController = TextEditingController();
   final TextEditingController repeatPassController = TextEditingController();
@@ -31,17 +32,25 @@ class SignUpPage extends StatelessWidget {
         );
         return;
       }
-
       try {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passController.text.trim(),
         );
+
+        await userCredential.user!.updateDisplayName(nameController.text.trim());
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
         Navigator.pop(context);
         
       } on FirebaseAuthException catch (e) {
         String message = 'An unknown error occurred.';
-
         if (e.code == 'weak-password') {
           message = 'The password provided is too weak.';
         } else if (e.code == 'email-already-in-use') {
@@ -49,7 +58,6 @@ class SignUpPage extends StatelessWidget {
         } else if (e.code == 'invalid-email') {
           message = 'The email address is not valid.';
         }
-        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
@@ -85,6 +93,8 @@ class SignUpPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 40),
+                buildTextField(nameController, Icons.person_outline, "Enter your name", hintColor, isDark),
+                const SizedBox(height: 20),
                 buildTextField(emailController, Icons.email_outlined, "Enter your email", hintColor, isDark),
                 const SizedBox(height: 20),
                 buildPassField(passController, "Create password", isDark),
