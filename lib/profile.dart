@@ -47,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/images/light/user.png'),
+                    backgroundImage: AssetImage('assets/images/light/7611084.png'),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -84,32 +84,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     child: const Text('Log Out'),
                   ),
-                ],
-              ),
-            ),
-            Container(
-              height: 4,
-              color: Colors.grey.withOpacity(0.3),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Icon(Icons.history, color: textColor),
-                  const SizedBox(width: 10),
-                  Text('Quiz History', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  QuizCard(subject: 'Chemistry', score: '30/40', isDark: isDark),
-                  QuizCard(subject: 'Sports', score: '40/40', isDark: isDark),
-                  QuizCard(subject: 'Math', score: '10/20', isDark: isDark),
-                  QuizCard(subject: 'Science', score: '50/50', isDark: isDark),
-                  QuizCard(subject: 'History', score: '10/10', isDark: isDark),
                 ],
               ),
             ),

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'theme_provider.dart';
-import 'HomeScreen.dart';
-import 'package:mindo/provider/questionprovider.dart';
 
 class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
@@ -13,29 +12,9 @@ class LeaderboardScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.themeMode == ThemeMode.dark;
     final User? user = FirebaseAuth.instance.currentUser;
-    final questionProvider = Provider.of<QuestionProvider>(context);
-
-    // قائمة تجريبية لـ leaderboard
-    final List<Map<String, dynamic>> leaderboardUsers = [
-      {'name': 'David James', 'score': 145.093},
-      {'name': 'Lennert Niva', 'score': 120.774},
-      {'name': 'Peter', 'score': 95.876},
-      {'name': 'Stina Gunnarsdottir', 'score': 90.281},
-      {'name': 'Benedikt Safiyulin', 'score': 88.463},
-      {'name': 'Gabriel Soares', 'score': 85.287},
-      {'name': 'Yahiro Ayuko', 'score': 84.009},
-    ];
 
     Color bgColor = isDark ? Colors.black : Colors.white;
     Color textColor = isDark ? Colors.white : Colors.black;
-    if (user != null) {
-      final userCurrentScore = (questionProvider.score / (questionProvider.questions.isEmpty ? 1 : questionProvider.questions.length)) * 100;
-      leaderboardUsers.add({'name': user.displayName ?? 'You', 'score': userCurrentScore});
-      leaderboardUsers.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
-    }
-
-    final int userRank = leaderboardUsers.indexWhere((element) => element['name'] == (user?.displayName ?? 'You')) + 1;
-    final double userCurrentScore = user != null ? (questionProvider.score / (questionProvider.questions.isEmpty ? 1 : questionProvider.questions.length)) * 100 : 0.0;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -53,130 +32,145 @@ class LeaderboardScreen extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Text(
-                    'Leaderboard',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textColor),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (leaderboardUsers.length > 1)
-                        _buildPodiumUser(
-                          rank: 2,
-                          name: leaderboardUsers[1]['name'] as String,
-                          score: (leaderboardUsers[1]['score'] as double).toStringAsFixed(3),
-                          avatarSize: 30,
-                          isCenter: false,
-                          isDark: isDark,
-                        ),
-                      const SizedBox(width: 20),
-                      if (leaderboardUsers.isNotEmpty)
-                        _buildPodiumUser(
-                          rank: 1,
-                          name: leaderboardUsers[0]['name'] as String,
-                          score: (leaderboardUsers[0]['score'] as double).toStringAsFixed(3),
-                          avatarSize: 50,
-                          isCenter: true,
-                          isDark: isDark,
-                        ),
-                      const SizedBox(width: 20),
-                      if (leaderboardUsers.length > 2)
-                        _buildPodiumUser(
-                          rank: 3,
-                          name: leaderboardUsers[2]['name'] as String,
-                          score: (leaderboardUsers[2]['score'] as double).toStringAsFixed(3),
-                          avatarSize: 30,
-                          isCenter: false,
-                          isDark: isDark,
-                        ),
-                    ],
-                  ),
-                ],
+              child: Text(
+                'Leaderboard',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[900] : Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF6366F1).withOpacity(0.2) : const Color(0xFF6366F1).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            '$userRank',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: textColor,
-                            ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('leaderboard')
+                    .orderBy('score', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text("No scores yet"));
+                  }
+
+                  final docs = snapshot.data!.docs;
+
+                  final leaderboardUsers = docs.map((doc) {
+                    return {
+                      'id': doc.id,
+                      'name': doc['name'] ?? 'Unknown',
+                      'score': (doc['score'] as num).toDouble(),
+                    };
+                  }).toList();
+
+                  // ترتيب المستخدم الحالي
+                  int userRank = -1;
+                  double userScore = 0;
+                  if (user != null) {
+                    final index = leaderboardUsers.indexWhere((e) => e['id'] == user.uid);
+                    if (index != -1) {
+                      userRank = index + 1;
+                      userScore = leaderboardUsers[index]['score'];
+                    }
+                  }
+
+                  // أول 3
+                  final topThree = leaderboardUsers.take(3).toList();
+                  // الباقي
+                  final rest = leaderboardUsers.skip(3).toList();
+
+                  return Column(
+                    children: [
+                      // لو المستخدم متسجل نعرض ترتيبه
+                      if (user != null && userRank != -1)
+                        Container(
+                          margin: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[900] : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(width: 16),
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: isDark ? Colors.blueGrey[700] : Colors.grey[300],
-                            child: Icon(Icons.person, color: isDark ? Colors.white : Colors.black),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              'You',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: textColor,
+                          child: Row(
+                            children: [
+                              Text(
+                                "$userRank",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              const Icon(Icons.person, size: 28),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  user.displayName ?? user.email ?? "You",
+                                  style: TextStyle(color: textColor),
+                                ),
+                              ),
+                              Text(
+                                userScore.toString(),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            userCurrentScore.toStringAsFixed(3),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: textColor,
-                            ),
+                        ),
+
+                      // البوديوم (Top 3)
+                      if (topThree.isNotEmpty)
+                        SizedBox(
+                          height: 180,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              if (topThree.length > 1)
+                                _buildPodiumItem(
+                                  2,
+                                  topThree[1]['name'],
+                                  topThree[1]['score'],
+                                  isDark,
+                                ),
+                              _buildPodiumItem(
+                                1,
+                                topThree[0]['name'],
+                                topThree[0]['score'],
+                                isDark,
+                                big: true,
+                              ),
+                              if (topThree.length > 2)
+                                _buildPodiumItem(
+                                  3,
+                                  topThree[2]['name'],
+                                  topThree[2]['score'],
+                                  isDark,
+                                ),
+                            ],
                           ),
-                        ],
+                        ),
+
+                      // الباقي
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: rest.length,
+                          itemBuilder: (context, index) {
+                            final item = rest[index];
+                            return _buildLeaderboardItem(
+                              index + 4,
+                              item['name'],
+                              item['score'].toString(),
+                              isDark,
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        itemCount: leaderboardUsers.length,
-                        itemBuilder: (context, index) {
-                          final user = leaderboardUsers[index];
-                          if (user['name'] == (user?.isEmpty ?? 'You')) {
-                            return const SizedBox.shrink();
-                          }
-                          return _buildLeaderboardItem(
-                            index + 1,
-                            user['name'] as String,
-                            (user['score'] as double).toStringAsFixed(3),
-                            isDark,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -186,65 +180,36 @@ class LeaderboardScreen extends StatelessWidget {
   }
 }
 
-Widget _buildPodiumUser({
-  required int rank,
-  required String name,
-  required String score,
-  required double avatarSize,
-  required bool isCenter,
-  required bool isDark,
-}) {
+Widget _buildPodiumItem(int rank, String name, double score, bool isDark, {bool big = false}) {
+  Color textColor = isDark ? Colors.white : Colors.black;
   return Column(
+    mainAxisAlignment: MainAxisAlignment.end,
     children: [
-      if (rank == 1) ...[
-        const Icon(
-          Icons.emoji_events,
-          color: Colors.yellow,
-          size: 28,
-        ),
-        const SizedBox(height: 4),
-      ],
-      Container(
-        width: avatarSize * 2,
-        height: avatarSize * 2,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white,
-            width: 2,
-          ),
-        ),
-        child: ClipOval(
-          child: Image.asset(
-            'assets/images/light/user.png',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: isDark ? Colors.blueGrey[800] : Colors.grey,
-                child: Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: avatarSize,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-      const SizedBox(height: 8),
       Text(
         name,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: isCenter ? 16 : 14,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
       ),
-      Text(
-        score,
-        style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 12,
+      Container(
+        width: big ? 80 : 60,
+        height: big ? 120 : 80,
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        decoration: BoxDecoration(
+          color: rank == 1
+              ? Colors.amber
+              : rank == 2
+              ? Colors.grey
+              : Colors.brown,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            "$rank\n$score",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     ],
@@ -256,8 +221,8 @@ Widget _buildLeaderboardItem(int rank, String name, String score, bool isDark) {
   Color cardColor = isDark ? Colors.grey[900]! : Colors.grey[200]!;
 
   return Container(
-    margin: const EdgeInsets.only(bottom: 24),
-    padding: const EdgeInsets.symmetric(vertical: 8),
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
     decoration: BoxDecoration(
       color: cardColor,
       borderRadius: BorderRadius.circular(10),
@@ -269,34 +234,24 @@ Widget _buildLeaderboardItem(int rank, String name, String score, bool isDark) {
           child: Text(
             rank.toString(),
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
               color: textColor,
             ),
           ),
         ),
         const SizedBox(width: 16),
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: isDark ? Colors.blueGrey[700] : Colors.grey[300],
-          child: Icon(Icons.person, color: isDark ? Colors.white : Colors.black),
-        ),
+        const Icon(Icons.person, size: 28),
         const SizedBox(width: 16),
         Expanded(
           child: Text(
             name,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
+            style: TextStyle(color: textColor),
           ),
         ),
         Text(
           score,
           style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
             color: textColor,
           ),
         ),

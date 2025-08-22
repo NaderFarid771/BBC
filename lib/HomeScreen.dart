@@ -34,12 +34,21 @@ class HomeScreen extends StatelessWidget {
               Text('Let’s make this day productive', style: TextStyle(fontWeight: FontWeight.w400, fontSize: 11, color: subTextColor)),
               const SizedBox(height: 40),
 
-              Text('Categories', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20, color: textColor)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Categories', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20, color: textColor)),
+                ], // عملتلها راب ب رو عشان كانت واخدة كولوم و سايب مساحة فاضية وحشة
+              ),
               const SizedBox(height: 16),
 
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
+              GridView.count( // حطيتهم في grid view عشان الوقت
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2, // عدد البطايق في كل صف
+                crossAxisSpacing: 16, // المسافة الأفقية بينهم
+                mainAxisSpacing: 16, // المسافة العمودية بينهم
+                childAspectRatio: 1.2, //نسبة العرض للارتفاع للبطايق
                 children: [
                   _buildCategoryCard(
                     context,
@@ -47,7 +56,6 @@ class HomeScreen extends StatelessWidget {
                     categoryId: '17',
                     imagePath: 'assets/images/light/dna.png',
                     questions: '10 Questions',
-                    bg: const Color(0xFFFEE2E2),
                     isDark: isDark,
                   ),
                   _buildCategoryCard(
@@ -56,7 +64,6 @@ class HomeScreen extends StatelessWidget {
                     categoryId: '18',
                     imagePath: 'assets/images/light/map.png',
                     questions: '10 Questions',
-                    bg: const Color(0xFFDBEAFE),
                     isDark: isDark,
                   ),
                   _buildCategoryCard(
@@ -65,7 +72,6 @@ class HomeScreen extends StatelessWidget {
                     categoryId: '21',
                     imagePath: 'assets/images/light/basket.png',
                     questions: '10 Questions',
-                    bg: const Color(0xFFE0E7FF),
                     isDark: isDark,
                   ),
                   _buildCategoryCard(
@@ -74,7 +80,6 @@ class HomeScreen extends StatelessWidget {
                     categoryId: '19',
                     imagePath: 'assets/images/light/test_tube.png',
                     questions: '10 Questions',
-                    bg: const Color(0xFFD1FAE5),
                     isDark: isDark,
                   ),
                   _buildCategoryCard(
@@ -83,7 +88,6 @@ class HomeScreen extends StatelessWidget {
                     categoryId: '19',
                     imagePath: 'assets/images/light/content.png',
                     questions: '10 Questions',
-                    bg: const Color(0xFFE2EAD1),
                     isDark: isDark,
                   ),
                   _buildCategoryCard(
@@ -92,7 +96,6 @@ class HomeScreen extends StatelessWidget {
                     categoryId: '23',
                     imagePath: 'assets/images/light/calender.png',
                     questions: '10 Questions',
-                    bg: const Color(0xFFFDE68A),
                     isDark: isDark,
                   ),
                 ],
@@ -130,7 +133,6 @@ class HomeScreen extends StatelessWidget {
     required String categoryId,
     required String imagePath,
     required String questions,
-    required Color bg,
     required bool isDark,
   }) {
     Color cardColor = isDark ? const Color(0xFF1C1C1C) : Colors.white;
@@ -147,8 +149,7 @@ class HomeScreen extends StatelessWidget {
         );
       },
       child: Container(
-        width: 120,
-        height: 150,
+        width: double.infinity, // تم تغيير العرض ليناسب الـ GridView
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(14),

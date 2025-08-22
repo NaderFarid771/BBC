@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mindo/provider/questionprovider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 // هذا السطر يحل المشكلة
 import '../widgets/option_tile.dart';
 import '../widgets/question_header.dart';
@@ -12,10 +14,10 @@ import 'oops_screen.dart';
 class QuizPage extends StatefulWidget {
   final String category;
   final int numberOfQuestions;
-  
+
   const QuizPage({
     super.key,
-    this.category = '9',           
+    this.category = '9',
     this.numberOfQuestions = 10,
   });
 
@@ -73,12 +75,32 @@ class _QuizPageState extends State<QuizPage> {
     startTimer();
   }
 
-  void _showResultDialog(QuestionProvider provider) {
+  Future<void> _showResultDialog(QuestionProvider provider) async {
     timer?.cancel();
+
+    // المستخدم الحالي
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      // حفظ السكور في Firestore
+      await FirebaseFirestore.instance.collection('leaderboard').doc(user.uid).set({
+        'name': user.displayName ?? user.email ?? 'Unknown',
+        'score': provider.score,
+        'timestamp': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+
+    // بعد الحفظ نعرض النتيجة
     if (provider.score > 5) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const CongratsScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const CongratsScreen()),
+      );
     } else {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OopsScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const OopsScreen()),
+      );
     }
   }
 
@@ -146,8 +168,8 @@ class _QuizPageState extends State<QuizPage> {
                       ElevatedButton(
                         onPressed: () {
                           provider.loadQuestions(
-                            widget.category, 
-                            widget.numberOfQuestions
+                              widget.category,
+                              widget.numberOfQuestions
                           );
                         },
                         child: const Text('Retry'),
@@ -162,7 +184,6 @@ class _QuizPageState extends State<QuizPage> {
                   child: Text('No questions available'),
                 );
               }
-
 
               final currentQ = convertToQuestion(provider);
 
@@ -204,7 +225,7 @@ class _QuizPageState extends State<QuizPage> {
                     child: ListView.builder(
                       itemCount: currentQ.options.length,
                       itemBuilder: (context, index) {
-                        bool isCorrect = provider.isAnswered && 
+                        bool isCorrect = provider.isAnswered &&
                             index == provider.correctAnswerIndex;
                         bool isWrong = provider.isAnswered &&
                             index == provider.selectedAnswerIndex &&
@@ -226,23 +247,23 @@ class _QuizPageState extends State<QuizPage> {
                   ),
 
                   NextButton(
-                    isLast: provider.currentQuestionIndex == 
+                    isLast: provider.currentQuestionIndex ==
                         provider.questions.length - 1,
                     onPressed: () {
                       if (provider.isAnswered) {
-                         if (provider.currentQuestionIndex ==
-                          provider.questions.length - 1) {
-                            _showResultDialog(provider);
+                        if (provider.currentQuestionIndex ==
+                            provider.questions.length - 1) {
+                          _showResultDialog(provider);
                         } else {
                           goToNextQuestion();
                         }
                       } else {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                           const SnackBar(
-                             content: Text('Please select an answer first.'),
-                             backgroundColor: Colors.red,
-                           ),
-                         );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please select an answer first.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                       }
                     },
                   ),
