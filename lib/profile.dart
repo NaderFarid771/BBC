@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'quizpage.dart';
 import 'theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'wellcome.dart';
@@ -47,13 +46,16 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/images/light/7611084.png'),
+                    backgroundImage:
+                        AssetImage('assets/images/light/7611084.png'),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     displayName,
                     style: TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: textColor),
                   ),
                   Text(
                     email,
@@ -77,7 +79,8 @@ class ProfileScreen extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -86,55 +89,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class QuizCard extends StatelessWidget {
-  final String subject;
-  final String score;
-  final bool isDark;
-
-  const QuizCard({super.key, required this.subject, required this.score, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    Color textColor;
-    Color refreshColor = Colors.grey;
-
-    if (subject == 'Sports') {
-      textColor = const Color(0xFF6366F1);
-      refreshColor = const Color(0xFF6366F1);
-    } else if (subject == 'Chemistry') {
-      textColor = Colors.grey;
-      refreshColor = Colors.grey;
-    } else {
-      textColor = isDark ? Colors.white : Colors.black;
-      refreshColor = Colors.grey;
-    }
-
-    return Card(
-      color: isDark ? Colors.grey[900] : Colors.grey[200],
-      child: ListTile(
-        title: Text(subject, style: TextStyle(color: textColor)),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(score, style: TextStyle(color: isDark ? Colors.white70 : Colors.black)),
-            GestureDetector(
-              onTap: () {
-                if (subject == 'Sports') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const QuizPage()),
-                  );
-                }
-              },
-              child: Icon(Icons.refresh, color: refreshColor),
             ),
           ],
         ),
